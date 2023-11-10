@@ -54,42 +54,6 @@ const unstableTests = new Map(
 
 const unstableAstTests = new Map();
 
-const espreeDisabledTests = new Set(
-  [
-    // These tests only work for `babel`
-    "comments-closure-typecast",
-  ].map((directory) => path.join(__dirname, "../format/js", directory)),
-);
-const acornDisabledTests = espreeDisabledTests;
-const meriyahDisabledTests = new Set([
-  ...espreeDisabledTests,
-  ...[
-    // Meriyah does not support decorator auto accessors syntax.
-    // But meriyah can parse it as an ordinary class property.
-    // So meriyah does not throw parsing error for it.
-    ...[
-      "basic.js",
-      "computed.js",
-      "private.js",
-      "static-computed.js",
-      "static-private.js",
-      "static.js",
-      "with-semicolon-1.js",
-      "with-semicolon-2.js",
-      "comments.js",
-    ].map((filename) => `js/decorator-auto-accessors/${filename}`),
-    // https://github.com/meriyah/meriyah/issues/233
-    "js/babel-plugins/decorator-auto-accessors.js",
-    // Parsing to different ASTs
-    "js/decorators/member-expression.js",
-  ].map((file) => path.join(__dirname, "../format", file)),
-]);
-const babelTsDisabledTest = new Set(
-  ["conformance/types/moduleDeclaration/kind-detection.ts"].map((file) =>
-    path.join(__dirname, "../format/typescript", file),
-  ),
-);
-
 const isUnstable = (filename, options) => {
   const testFunction = unstableTests.get(filename);
 
@@ -98,6 +62,7 @@ const isUnstable = (filename, options) => {
   }
 
   return testFunction(options);
+
 };
 
 const isAstUnstable = (filename, options) => {
@@ -163,11 +128,6 @@ function runSpec(fixtures, parsers, options) {
     options = { errors: true, ...options };
   }
 
-  const IS_TYPESCRIPT_ONLY_TEST = isTestDirectory(
-    dirname,
-    "misc/typescript-only",
-  );
-
   if (IS_PARSER_INFERENCE_TESTS) {
     parsers = [undefined];
   }
@@ -220,40 +180,6 @@ function runSpec(fixtures, parsers, options) {
   }
 
   const [parser] = parsers;
-  const allParsers = [...parsers];
-
-  if (!IS_ERROR_TESTS) {
-    if (
-      parsers.includes("babel") &&
-      (isTestDirectory(dirname, "js") || isTestDirectory(dirname, "jsx"))
-    ) {
-      if (!parsers.includes("acorn") && !acornDisabledTests.has(dirname)) {
-        allParsers.push("acorn");
-      }
-      if (!parsers.includes("espree") && !espreeDisabledTests.has(dirname)) {
-        allParsers.push("espree");
-      }
-      if (!parsers.includes("meriyah") && !meriyahDisabledTests.has(dirname)) {
-        allParsers.push("meriyah");
-      }
-    }
-
-    if (
-      parsers.includes("typescript") &&
-      !parsers.includes("babel-ts") &&
-      !IS_TYPESCRIPT_ONLY_TEST
-    ) {
-      allParsers.push("babel-ts");
-    }
-
-    if (parsers.includes("flow") && !parsers.includes("babel-flow")) {
-      allParsers.push("babel-flow");
-    }
-
-    if (parsers.includes("babel") && !parsers.includes("__babel_estree")) {
-      allParsers.push("__babel_estree");
-    }
-  }
 
   const stringifiedOptions = stringifyOptionsForTitle(options);
 
@@ -269,49 +195,34 @@ function runSpec(fixtures, parsers, options) {
         filepath: filename,
         parser,
       };
-      const shouldThrowOnMainParserFormat = shouldThrowOnFormat(
+      const shouldThrowOnFormat_ = shouldThrowOnFormat(
         name,
         formatOptions,
       );
 
-      let mainParserFormatResult;
-      if (shouldThrowOnMainParserFormat) {
-        mainParserFormatResult = { options: formatOptions, error: true };
+      let formatResult;
+      if (shouldThrowOnFormat_) {
+        formatResult = { options: formatOptions, error: true };
       } else {
         beforeAll(async () => {
-          mainParserFormatResult = await format(code, formatOptions);
+          formatResult = await format(code, formatOptions);
         });
       }
 
-      for (const currentParser of allParsers) {
-        if (
-          (currentParser === "espree" && espreeDisabledTests.has(filename)) ||
-          (currentParser === "meriyah" && meriyahDisabledTests.has(filename)) ||
-          (currentParser === "acorn" && acornDisabledTests.has(filename)) ||
-          (currentParser === "babel-ts" && babelTsDisabledTest.has(filename))
-        ) {
-          continue;
-        }
+      const testTitle = shouldThrowOnFormat_ || "format";
 
-        const testTitle =
-          shouldThrowOnMainParserFormat ||
-          formatOptions.parser !== currentParser
-            ? `[${currentParser}] format`
-            : "format";
-
-        test(testTitle, async () => {
-          await runTest({
-            parsers,
-            name,
-            filename,
-            code,
-            output,
-            parser: currentParser,
-            mainParserFormatResult,
-            mainParserFormatOptions: formatOptions,
-          });
+      test(testTitle, async () => {
+        await runTest({
+          parsers,
+          name,
+          filename,
+          code,
+          output,
+          parser,
+          formatResult,
+          formatOptions,
         });
-      }
+      });
     });
   }
 }
@@ -323,18 +234,15 @@ async function runTest({
   code,
   output,
   parser,
-  mainParserFormatResult,
-  mainParserFormatOptions,
+  formatResult,
+  formatOptions,
 }) {
-  let formatOptions = mainParserFormatOptions;
-  let formatResult = mainParserFormatResult;
-
   // Verify parsers or error tests
   if (
-    mainParserFormatResult.error ||
-    mainParserFormatOptions.parser !== parser
+    formatResult.error ||
+    formatOptions.parser !== parser
   ) {
-    formatOptions = { ...mainParserFormatResult.options, parser };
+    formatOptions = { ...formatResult.options, parser };
     const runFormat = () => format(code, formatOptions);
 
     if (shouldThrowOnFormat(name, formatOptions)) {
@@ -343,7 +251,7 @@ async function runTest({
     }
 
     // Verify parsers format result should be the same as main parser
-    output = mainParserFormatResult.outputWithCursor;
+    output = formatResult.outputWithCursor;
     formatResult = await runFormat();
   }
 

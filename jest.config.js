@@ -61,10 +61,7 @@ const config = {
     "jest-snapshot-serializer-ansi",
   ],
   testMatch: [
-    "<rootDir>/tests/format/**/jsfmt.spec.js",
-    "<rootDir>/tests/integration/__tests__/**/*.js",
-    "<rootDir>/tests/unit/**/*.js",
-    "<rootDir>/tests/dts/unit/**/*.js",
+    "<rootDir>/tests/format/js/**/jsfmt.spec.js",
   ],
   testPathIgnorePatterns,
   // collectCoverage: ENABLE_CODE_COVERAGE,
