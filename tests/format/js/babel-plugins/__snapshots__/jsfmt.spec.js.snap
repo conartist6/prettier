@@ -1061,6 +1061,15 @@ exports[`flow.js [meriyah] format 1`] = `
   4 |"
 `;
 
+exports[`flow.js throw 1`] = `
+"Unexpected token, expected "," (3:17)
+  1 | // https://babeljs.io/docs/en/babel-preset-flow
+  2 |
+> 3 | function foo(one: any, two: number, three?): string {}
+    |                 ^
+  4 |"
+`;
+
 exports[`function-bind.js [acorn] format 1`] = `
 "Unexpected token (3:5)
   1 | // https://babeljs.io/docs/en/babel-plugin-proposal-function-bind
@@ -2700,6 +2709,15 @@ exports[`typescript.js [espree] format 1`] = `
 
 exports[`typescript.js [meriyah] format 1`] = `
 "Missing initializer in const declaration (3:8)
+  1 | // https://babeljs.io/docs/en/babel-preset-typescript
+  2 |
+> 3 | const x: number = 0;
+    |        ^
+  4 |"
+`;
+
+exports[`typescript.js throw 1`] = `
+"Unexpected token (3:8)
   1 | // https://babeljs.io/docs/en/babel-preset-typescript
   2 |
 > 3 | const x: number = 0;

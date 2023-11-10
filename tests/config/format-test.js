@@ -209,7 +209,7 @@ function runSpec(fixtures, parsers, options) {
         });
       }
 
-      const testTitle = shouldThrowOnFormat_ || "format";
+      const testTitle = shouldThrowOnFormat_ ? "throw" : "format";
 
       test(testTitle, async () => {
         await runTest({

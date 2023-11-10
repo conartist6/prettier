@@ -92,6 +92,13 @@ exports[`invalid-tuple-holes.js [meriyah] format 1`] = `
   2 |"
 `;
 
+exports[`invalid-tuple-holes.js throw 1`] = `
+"Unexpected token ','. (1:4)
+> 1 | #[,]
+    |    ^
+  2 |"
+`;
+
 exports[`syntax.js [acorn] format 1`] = `
 "Unexpected character '[' (1:2)
 > 1 | #[]

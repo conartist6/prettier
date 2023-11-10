@@ -105,6 +105,13 @@ exports[`no-default.js [meriyah] format 1`] = `
   2 |"
 `;
 
+exports[`no-default.js throw 1`] = `
+"Only \`import defer * as x from "./module"\` is valid. (1:14)
+> 1 | import defer x from "x";
+    |              ^
+  2 |"
+`;
+
 exports[`no-named.js [__babel_estree] format 1`] = `
 "Only \`import defer * as x from "./module"\` is valid. (1:16)
 > 1 | import defer { x } from "x";
@@ -137,5 +144,12 @@ exports[`no-named.js [meriyah] format 1`] = `
 "Import source must be string (1:14)
 > 1 | import defer { x } from "x";
     |              ^
+  2 |"
+`;
+
+exports[`no-named.js throw 1`] = `
+"Only \`import defer * as x from "./module"\` is valid. (1:16)
+> 1 | import defer { x } from "x";
+    |                ^
   2 |"
 `;

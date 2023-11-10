@@ -259,6 +259,13 @@ exports[`no-named.js [meriyah] format 1`] = `
   2 |"
 `;
 
+exports[`no-named.js throw 1`] = `
+"Only \`import source x from "./module"\` is valid. (1:17)
+> 1 | import source { x } from "x";
+    |                 ^
+  2 |"
+`;
+
 exports[`no-namespace.js [__babel_estree] format 1`] = `
 "Only \`import source x from "./module"\` is valid. (1:15)
 > 1 | import source * as x from "x";
@@ -289,6 +296,13 @@ exports[`no-namespace.js [espree] format 1`] = `
 
 exports[`no-namespace.js [meriyah] format 1`] = `
 "Import source must be string (1:15)
+> 1 | import source * as x from "x";
+    |               ^
+  2 |"
+`;
+
+exports[`no-namespace.js throw 1`] = `
+"Only \`import source x from "./module"\` is valid. (1:15)
 > 1 | import source * as x from "x";
     |               ^
   2 |"
