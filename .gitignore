@@ -6,6 +6,7 @@
 /scripts/tools/bundle-test/node_modules
 /scripts/tools/eslint-plugin-prettier-internal-rules/node_modules
 
+/tests/config/junk
 .tmp
 *.log
 /errors

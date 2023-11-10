@@ -2,12 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
 import createEsmUtils from "esm-utils";
+import {execa} from 'execa';
 import getPrettier from "./get-prettier.js";
 import checkParsers from "./utils/check-parsers.js";
 import createSnapshot from "./utils/create-snapshot.js";
 import visualizeEndOfLine from "./utils/visualize-end-of-line.js";
 import consistentEndOfLine from "./utils/consistent-end-of-line.js";
 import stringifyOptionsForTitle from "./utils/stringify-options-for-title.js";
+import { tmpdir } from "node:os";
 
 const { __dirname } = createEsmUtils(import.meta);
 
@@ -415,12 +417,46 @@ async function format(originalText, originalOptions) {
     originalOptions,
   );
   const inputWithCursor = insertCursor(input, options.cursorOffset);
-  const prettier = await getPrettier();
 
-  const { formatted: output, cursorOffset } = await ensurePromise(
-    prettier.formatWithCursor(input, options),
-  );
-  const outputWithCursor = insertCursor(output, cursorOffset);
+  // const { formatted: output, cursorOffset } = await ensurePromise(
+  //   prettier.formatWithCursor(input, options),
+  // );
+
+  const buildBiomeCliArgs = (options) => {
+    return [
+      // `--config-path=${new URL("../", import.meta.url)}`,
+      `--line-width=${options.printWidth}`,
+      `--quote-style=${options.singleQuote ? 'single' : 'double'}`,
+      `--jsx-quote-style=${options.jsxSingleQuote ? 'single' : 'double'}`,
+      `--indent-style=${options.tabs ? 'tab' : 'space'}`,
+      `--indent-width=${options.tabWidth || '80'}`,
+      `--semicolons=${options.semicolons ? 'always' : 'as-needed'}`,
+      `--arrow-parentheses=${options.arrowParens === 'avoid' ? 'as-needed' : 'always'}`,
+      `--quote-properties=${options.quoteProps || 'as-needed'}`,
+      `--trailing-comma=${options.trailingComma || 'all'}`
+    ];
+  }
+
+  const cursorOffset = 0;
+
+  debugger;
+
+  // console.log(`biome format ${buildBiomeCliArgs(options)} --stdin-file-path=tmp.js`)
+
+  const tmpPath = String(new URL(`./junk/${String(1000 + Math.random() * 1000).slice(1, 4)}.js`, import.meta.url)).slice(7)
+
+  fs.writeFileSync(tmpPath, input, 'utf-8');
+
+  let output;
+
+  try {
+    (await execa('biome', ['format', '--write', ...buildBiomeCliArgs(options), tmpPath])).stdout;
+    output = fs.readFileSync(tmpPath, 'utf-8')
+  } finally {
+    fs.unlinkSync(tmpPath)
+  }
+
+  const outputWithCursor = output //insertCursor(output, cursorOffset);
   const eolVisualizedOutput = visualizeEndOfLine(outputWithCursor);
 
   const changed = outputWithCursor !== inputWithCursor;
